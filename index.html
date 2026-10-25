@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spray or Wait – crop decision MVP</title>
+<style>
+:root{--bg:#eef6ee;--card:#fff;--fg:#14281a;--mute:#566a5b;--line:#cfe0d1;--g:#1e8a45;--gb:#d9f3e0;--a:#b86e00;--ab:#fff0c9;--r:#c62828;--rb:#ffe0dc;--hd1:#0f7b3f;--hd2:#12a29a;--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1a12;--card:#162619;--fg:#e8f2ea;--mute:#9ab5a0;--line:#2b4332;--g:#58d27f;--gb:#173a24;--a:#ffc857;--ab:#40300e;--r:#ff8a80;--rb:#45201d;--hd1:#0b5c2e;--hd2:#0b7a74;--on:#0d1a12}}
+:root[data-theme="dark"]{--bg:#0d1a12;--card:#162619;--fg:#e8f2ea;--mute:#9ab5a0;--line:#2b4332;--g:#58d27f;--gb:#173a24;--a:#ffc857;--ab:#40300e;--r:#ff8a80;--rb:#45201d;--hd1:#0b5c2e;--hd2:#0b7a74;--on:#0d1a12}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Telugu",sans-serif}
+header{background:linear-gradient(120deg,var(--hd1),var(--hd2));color:#fff;padding:18px 16px 26px}
+.hin{max-width:720px;margin:0 auto;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+h1{font-size:26px;line-height:1.2;margin:0 0 4px}.sub{margin:0;opacity:.92;font-size:15px}
+.lang{display:flex;gap:6px}.lang button{font:inherit;border:1px solid #ffffff99;background:#ffffff22;color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer}
+.lang button[aria-pressed=true]{background:#fff;color:#0f5e32;font-weight:700}
+main{max-width:720px;margin:-14px auto 0;padding:0 16px 48px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px #0000000d}
+label,.lb{display:block;font-weight:700;font-size:14px;margin:16px 0 6px}.card>:first-child{margin-top:0}
+.seg{display:grid;gap:8px}.c3{grid-template-columns:repeat(3,1fr)}.c4{grid-template-columns:repeat(4,1fr)}.c2{grid-template-columns:repeat(2,1fr)}
+.seg button,.btn{font:inherit;border:2px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;padding:9px 4px;cursor:pointer;line-height:1.25}
+.crop[data-c=paddy]{--k:#c79a00}.crop[data-c=chilli]{--k:#d32f2f}.crop[data-c=cotton]{--k:#3d7de0}
+.crop{border-color:var(--k)!important}.crop[aria-pressed=true]{background:var(--k)!important;color:#fff!important;font-weight:700}
+.crop .e{font-size:22px;display:block}
+.wx button[aria-pressed=true],.rn button[aria-pressed=true]{background:var(--g);color:var(--on);border-color:var(--g);font-weight:700}
+.wx button{border-color:#4aa3df}
+select,input[type=number]{font:inherit;width:100%;padding:10px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
+input[type=range]{width:100%;accent-color:var(--g)}
+.row{display:flex;justify-content:space-between;gap:8px}.val{font-weight:700;color:var(--g)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #f5a623;outline-offset:2px}
+.demo{width:100%;margin-top:14px;background:linear-gradient(90deg,#ff8a3d,#e8453c);color:#fff;border:0;font-weight:700;padding:11px}
+#res{border-width:3px}.act{border-color:var(--r);background:var(--rb)}.prev{border-color:var(--a);background:var(--ab)}.wait{border-color:var(--g);background:var(--gb)}
+.tag{display:inline-block;font-weight:700;padding:3px 12px;border-radius:99px;margin-bottom:6px;color:var(--on)}
+.act .tag{background:var(--r)}.prev .tag{background:var(--a)}.wait .tag{background:var(--g)}
+#res h2{font-size:21px;line-height:1.3;margin:0 0 6px}#res h3{font-size:15px;margin:16px 0 4px}#res ul{margin:0;padding-left:20px}#res li{margin-bottom:3px}
+.note{font-size:13px;color:var(--mute)}.warn{background:#0000000f;border-radius:8px;padding:8px 10px;margin:8px 0}
+</style></head><body>
+<header><div class="hin"><div><h1 id="h1"></h1><p class="sub" id="sub"></p></div>
+<div class="lang"><button id="en" aria-pressed="true">EN</button><button id="te" aria-pressed="false">తెలుగు</button></div></div></header>
+<main>
+<section class="card">
+<div class="lb" id="l-crop"></div><div class="seg c3" id="crops"></div>
+<label for="pest" id="l-pest"></label><select id="pest"></select>
+<label for="das" id="l-das"></label><input type="number" id="das" min="0" max="220" value="75">
+<div class="note" id="stg"></div>
+<label for="aff"><span class="row"><span id="l-aff"></span><span class="val" id="affv"></span></span></label>
+<input type="range" id="aff" min="0" max="50" value="2"><div class="note" id="n-aff"></div>
+<div class="lb" id="l-wx"></div><div class="seg c2 wx" id="wx"></div>
+<label for="hum"><span class="row"><span id="l-hum"></span><span class="val" id="humv"></span></span></label>
+<input type="range" id="hum" min="30" max="100" value="85">
+<div class="lb" id="l-rain"></div><div class="seg c4 rn" id="rain"></div>
+<button class="btn demo" id="demo"></button>
+</section>
+<section class="card" id="res" aria-live="polite"></section>
+<p class="note" id="foot"></p>
+</main>
+<script>
+const D={
+paddy:{n:["Paddy","వరి"],e:"🌾",st:[[0,25,"Nursery / early growth","నారుమడి / ప్రారంభ దశ",0],[25,55,"Tillering","పిలకలు వేసే దశ",1],[55,75,"Panicle initiation","పొట్ట దశ",1],[75,100,"Flowering","పూత దశ",1],[100,150,"Grain filling","గింజ గట్టిపడే దశ",0]],
+p:[["Blast (leaf spots)","అగ్గి తెగులు (ఆకు మచ్చలు)","d","wet",5,"Avoid extra nitrogen; keep the nursery drained; use tolerant varieties.","నత్రజని ఎక్కువగా వేయవద్దు; నారుమడిలో నీరు నిలవకుండా చూడండి; తట్టుకునే రకాలు వాడండి.","Seed treatment with Pseudomonas fluorescens.","విత్తన శుద్ధికి సూడోమోనాస్ ఫ్లోరెసెన్స్ వాడండి."],
+["Sheath blight","పొట్ట కుళ్ళు తెగులు","d","wet",10,"Reduce plant density; split nitrogen; drain the field now and then.","మొక్కల సాంద్రత తగ్గించండి; నత్రజనిని విడతలుగా వేయండి; అప్పుడప్పుడు నీరు తీసి ఆరబెట్టండి.","Pseudomonas or Trichoderma based products.","సూడోమోనాస్ లేదా ట్రైకోడెర్మా ఆధారిత జీవ ఉత్పత్తులు."],
+["Brown planthopper","గోధుమ రంగు దోమ (దోమపోటు)","p","any",15,"Alternate wetting and drying; avoid extra nitrogen; leave a path every few metres for scouting.","తడి, ఆరబెట్టు పద్ధతిలో నీరు పెట్టండి; నత్రజని ఎక్కువ వద్దు; కొన్ని మీటర్లకు ఒక దారి వదలండి.","Protect spiders and mirid bugs: avoid broad-spectrum sprays early.","సాలీడ్లు, మిరిడ్ బగ్స్ వంటి మిత్ర పురుగులను కాపాడండి; ముందే విస్తృత విషపు మందులు వాడవద్దు."],
+["Stem borer (dead hearts)","కాండం తొలుచు పురుగు (మొవ్వు చనిపోవడం)","p","any",5,"Clip seedling tips before transplanting; remove stubble after harvest.","నాటే ముందు నారు కొనలు కత్తిరించండి; కోత తర్వాత మొదళ్ళు తీసివేయండి.","Pheromone traps and Trichogramma egg cards.","లింగాకర్షక బుట్టలు, ట్రైకోగ్రామా కార్డులు."],
+["Leaf folder","ఆకు ముడత పురుగు","p","any",10,"Avoid extra nitrogen; keep bunds free of grass.","నత్రజని ఎక్కువ వద్దు; గట్లపై గడ్డి తీసివేయండి.","Trichogramma release.","ట్రైకోగ్రామా విడుదల."]]},
+chilli:{n:["Chilli","మిరప"],e:"🌶️",st:[[0,30,"Establishment","నాటుకునే దశ",0],[30,60,"Vegetative","శాఖీయ దశ",0],[60,100,"Flowering and fruit set","పూత, కాత దశ",1],[100,200,"Fruiting and picking","కాయ దశ",1]],
+p:[["Thrips (leaves curl upward)","తామర పురుగులు (ఆకులు పైకి ముడుచుకోవడం)","p","dry",15,"Blue sticky traps; avoid water stress; remove weeds around the field.","నీలం జిగురు అట్టలు; నీటి ఒత్తిడి రాకుండా చూడండి; పొలంలో కలుపు తీయండి.","Neem seed kernel extract spray.","వేప గింజల కషాయం పిచికారీ."],
+["Mites (leaves curl downward)","ఎర్రనల్లి (ఆకులు కిందికి ముడుచుకోవడం)","p","dry",10,"Avoid dusty, water-stressed patches; remove badly affected plants.","దుమ్ము, నీటి ఒత్తిడి ఉన్న చోట్ల జాగ్రత్త; ఎక్కువ దెబ్బతిన్న మొక్కలు తీసివేయండి.","Neem-based spray; conserve predatory mites.","వేప ఆధారిత పిచికారీ; మిత్ర నల్లులను కాపాడండి."],
+["Anthracnose / fruit rot","కాయ కుళ్ళు తెగులు (ఆంత్రాక్నోజ్)","d","wet",5,"Remove and burn infected fruits; avoid overhead irrigation; use balanced fertiliser.","తెగులు సోకిన కాయలు తీసి కాల్చండి; పైనుంచి నీరు పోయవద్దు; సమతుల్య ఎరువులు వాడండి.","Trichoderma or Pseudomonas based products.","ట్రైకోడెర్మా లేదా సూడోమోనాస్ ఉత్పత్తులు."],
+["Leaf curl virus complex","ఆకు ముడత వైరస్","d","any",5,"Pull out and destroy infected plants early; control whitefly; grow border crops.","సోకిన మొక్కలను ముందే పీకి నాశనం చేయండి; తెల్లదోమను అదుపు చేయండి; గట్లపై అడ్డు పంటలు వేయండి.","Yellow sticky traps for whitefly; neem spray on vectors.","తెల్లదోమకు పసుపు జిగురు అట్టలు; వేప పిచికారీ."],
+["Fruit borer","కాయ తొలుచు పురుగు","p","any",10,"Hand-pick larvae; pheromone traps; remove damaged fruits.","లార్వాలను చేతితో ఏరండి; లింగాకర్షక బుట్టలు; దెబ్బతిన్న కాయలు తీసివేయండి.","NPV or Bt based products.","ఎన్‌పీవీ లేదా బీటీ ఉత్పత్తులు."]]},
+cotton:{n:["Cotton","పత్తి"],e:"☁️",st:[[0,35,"Seedling","మొలక దశ",0],[35,70,"Squaring","పూత మొగ్గ దశ",1],[70,110,"Flowering and boll set","పూత, కాయ కట్టే దశ",1],[110,160,"Boll development","కాయ పెరుగుదల దశ",1],[160,220,"Picking","పత్తి తీత దశ",0]],
+p:[["Whitefly","తెల్లదోమ","p","dry",15,"Yellow sticky traps; remove weed hosts; avoid extra nitrogen.","పసుపు జిగురు అట్టలు; కలుపు మొక్కలు తీయండి; నత్రజని ఎక్కువ వద్దు.","Neem seed kernel extract; conserve natural enemies.","వేప గింజల కషాయం; మిత్ర పురుగులను కాపాడండి."],
+["Jassids / aphids","పచ్చ దోమ, పేనుబంక","p","dry",20,"Grow tolerant hybrids; avoid early broad-spectrum sprays.","తట్టుకునే హైబ్రిడ్లు వేయండి; ముందే విస్తృత విషపు మందులు వాడవద్దు.","Neem-based spray; ladybird beetles and lacewings help.","వేప ఆధారిత పిచికారీ; లేడీబర్డ్ బీటిల్స్ సహాయపడతాయి."],
+["Pink bollworm (damaged bolls)","గులాబి రంగు కాయ తొలుచు పురుగు (దెబ్బతిన్న కాయలు)","p","any",8,"Pheromone traps; destroy rosette flowers; destroy crop stalks after final picking.","లింగాకర్షక బుట్టలు; గులాబీ పూలను నాశనం చేయండి; చివరి తీత తర్వాత పత్తి కర్రలను నాశనం చేయండి.","Release Trichogramma where recommended.","సిఫార్సు చేసిన చోట ట్రైకోగ్రామా విడుదల చేయండి."],
+["American bollworm","పచ్చ పురుగు (శనగ పచ్చ పురుగు)","p","any",10,"Hand-pick larvae; pheromone traps; grow trap crops on borders.","లార్వాలను చేతితో ఏరండి; లింగాకర్షక బుట్టలు; గట్లపై ఎర పంటలు వేయండి.","NPV or Bt based products.","ఎన్‌పీవీ లేదా బీటీ ఉత్పత్తులు."],
+["Leaf spot / boll rot","ఆకు మచ్చ, కాయ కుళ్ళు","d","wet",10,"Avoid a dense canopy so air can move; remove rotten bolls.","ఆకుల గుబురు తగ్గించి గాలి ఆడేలా చూడండి; కుళ్ళిన కాయలు తీసివేయండి.","Pseudomonas based products.","సూడోమోనాస్ ఆధారిత ఉత్పత్తులు."]]}};
+const W=[["☀️","Sunny and dry","ఎండగా, పొడిగా",45,"none"],["☁️","Cloudy and humid","మబ్బుగా, తేమగా",82,"none"],["🌦️","Rainy","వర్షం",90,"light"],["⛈️","Stormy","భారీ వర్షం",95,"storm"]];
+const RN=[["none","None","లేదు"],["light","Light","తేలికపాటి"],["heavy","Heavy","భారీ"],["storm","Very heavy","చాలా భారీ"]];
+const S={
+h1:["Spray or Wait","స్ప్రే చేయాలా? ఆగాలా?"],
+sub:["Should you act, and when? Decision support for paddy, chilli and cotton.","చర్య తీసుకోవాలా, ఎప్పుడు? వరి, మిరప, పత్తికి నిర్ణయ సహాయం."],
+crop:["Which crop?","ఏ పంట?"],pest:["What do you see?","మీకు ఏమి కనిపిస్తోంది?"],das:["Days since sowing / transplanting","విత్తిన / నాటిన రోజులు"],
+stg:["Growth stage: ","పంట దశ: "],sens:[" (sensitive stage, limit lowered)"," (సున్నితమైన దశ, పరిమితి తగ్గించబడింది)"],
+aff:["Plants or area affected","దెబ్బతిన్న మొక్కలు లేదా ప్రాంతం"],naff:["Walk 5 spots in the field, check about 10 plants at each, and count the affected ones.","పొలంలో 5 చోట్ల తిరిగి, ప్రతి చోట సుమారు 10 మొక్కలు చూసి, దెబ్బతిన్నవి లెక్కించండి."],
+wx:["Weather, next 3 days (tap one, then fine-tune)","రాబోయే 3 రోజుల వాతావరణం (ఒకటి ఎంచుకుని సరిచేయండి)"],hum:["Humidity","తేమ"],rain:["Rain expected?","వర్షం వస్తుందా?"],
+demo:["Load demo: few damaged leaves, rain coming","డెమో: కొన్ని ఆకులు దెబ్బతిన్నాయి, వర్షం రాబోతోంది"],
+act:["Act now","ఇప్పుడే చర్య"],prev:["Prevent","ముందు జాగ్రత్త"],wait:["Wait","వేచి ఉండండి"],
+as:["Damage has crossed the action limit. Act now.","నష్టం పరిమితిని దాటింది. ఇప్పుడే చర్య తీసుకోండి."],
+ps:["Damage is below the limit, but the weather favours spread. Take preventive action before it turns.","ఇంకా పరిమితి దాటలేదు, కానీ వాతావరణం వ్యాప్తికి అనుకూలం. ముందే నివారణ చర్య తీసుకోండి."],
+ws:[n=>`No spray needed now. Check again in ${n} days.`,n=>`ఇప్పుడు స్ప్రే అవసరం లేదు. ${n} రోజుల తర్వాత మళ్లీ చూడండి.`],
+rainAct:["Heavy rain washes sprays off. Spray as soon as the rain clears.","భారీ వర్షం స్ప్రేను కొట్టుకుపోతుంది. వర్షం ఆగిన వెంటనే స్ప్రే చేయండి."],
+rainPrev:["Rain is coming: finish any spray in a dry spell before it starts.","వర్షం రాబోతోంది: వర్షం మొదలయ్యే ముందు పొడి వాతావరణంలో స్ప్రే పూర్తి చేయండి."],
+why:["Why","కారణాలు"],w1:[(a,l,p)=>`Affected: ${a}% against an action limit of ${l}% for ${p}.`,(a,l,p)=>`దెబ్బతిన్నది: ${a}%, చర్య పరిమితి: ${l}%. సమస్య: ${p}.`],
+w2:[(t,r)=>`Weather risk for this ${t} over the next 3 days: ${r}.`,(t,r)=>`రాబోయే 3 రోజుల్లో ఈ ${t}కు వాతావరణ ప్రమాదం: ${r}.`],
+w3:[(s,x)=>`Crop stage: ${s}${x?", when losses hurt most":""}.`,(s,x)=>`పంట దశ: ${s}${x?", నష్టం ఎక్కువగా ఉండే దశ":""}.`],
+dis:["disease","తెగులు"],pst:["pest","పురుగు"],rk:{high:["High","ఎక్కువ"],med:["Medium","మధ్యస్థం"],low:["Low","తక్కువ"]},
+todo:["What to do","ఏమి చేయాలి"],todo2:["What to do, in this order","ఈ క్రమంలో చేయండి"],
+scout:[n=>`Keep scouting: look at the same 5 spots again in ${n} days.`,n=>`అదే 5 చోట్ల ${n} రోజుల తర్వాత మళ్లీ చూడండి.`],photo:["Take a photo of the damage today to compare later.","ఈ రోజు నష్టం ఫోటో తీసుకోండి, తర్వాత పోల్చడానికి."],
+cul:["Cultural: ","సాగు పద్ధతులు: "],bio:["Biological: ","జీవ పద్ధతులు: "],
+chem:["Chemical, last resort: take the active ingredient and dose from the ANGRAU package of practices or the product label. Wear protective gear and respect the waiting period before harvest.","రసాయనం (చివరి ఉపాయం): మందు పేరు, మోతాదు ANGRAU సిఫార్సులు లేదా ప్యాకెట్ లేబుల్ నుంచి తీసుకోండి. రక్షణ దుస్తులు ధరించండి, కోతకు ముందు వేచి ఉండే కాలం పాటించండి."],
+nochem:[l=>`Chemical spray is not needed yet. Keep it for if the damage crosses ${l}%.`,l=>`రసాయన స్ప్రే ఇంకా అవసరం లేదు. నష్టం ${l}% దాటితే వాడండి.`],
+chk:["Check again","మళ్లీ చూడండి"],chk2:[n=>`${n} days after you act, in the same 5 spots.`,n=>`చర్య తీసుకున్న ${n} రోజుల తర్వాత అదే 5 చోట్ల చూడండి.`],
+foot:["MVP prototype. Action limits and weather rules are illustrative placeholders to replace with verified ANGRAU / ICAR values. Weather is entered by hand here; the WhatsApp version will pull a live forecast.","MVP నమూనా. చర్య పరిమితులు, వాతావరణ నియమాలు ఉదాహరణ విలువలు మాత్రమే; వాటిని ధృవీకరించిన ANGRAU / ICAR విలువలతో మార్చాలి. ఇక్కడ వాతావరణం చేతితో ఇస్తారు; WhatsApp వెర్షన్ లైవ్ ఫోర్కాస్ట్ తీసుకుంటుంది."]};
+function risk(f,h,r){const rr=r!=="none";let s=0;
+if(f==="wet")s=(h>=80?2:h>=70?1:0)+(rr?1:0);
+else if(f==="dry")s=(h<60?2:h<70?1:0)+(r==="none"?1:0);
+else s=1+(h>=80&&rr?1:0);
+return s>=3?"high":s===2?"med":"low"}
+function stageOf(c,d){return D[c].st.find(s=>d>=s[0]&&d<s[1])||D[c].st[D[c].st.length-1]}
+function decide(c,pi,a,h,r,d){const p=D[c].p[pi],st=stageOf(c,d);
+const lim=Math.round(p[4]*(st[4]?0.7:1)*10)/10,rk=risk(p[3],h,r);let k,days;
+if(a>=lim){k="act";days=3}else if(rk==="high"&&a>=lim*0.4){k="prev";days=2}else{k="wait";days=rk==="high"?2:rk==="med"?3:5}
+return{k,days,lim,rk,st,p}}
+/*END-LOGIC*/
+let crop="chilli",L=0,rain="light";
+const $=id=>document.getElementById(id),T=k=>S[k][L];
+function render(){
+const pi=+$("pest").value||0,a=+$("aff").value,h=+$("hum").value,d=+$("das").value||0;
+const x=decide(crop,pi,a,h,rain,d),p=x.p,st=x.st,k=x.k;
+$("affv").textContent=a+"%";$("humv").textContent=h+"%";
+$("stg").textContent=T("stg")+st[2+L]+(st[4]?T("sens"):"");
+const pn=p[L],tp=T(p[2]==="d"?"dis":"pst");
+let o=`<span class="tag">${T(k)}</span><h2>${k==="act"?T("as"):k==="prev"?T("ps"):S.ws[L](x.days)}</h2>`;
+if(k==="act"&&(rain==="heavy"||rain==="storm"))o+=`<div class="warn"><b>${T("rainAct")}</b></div>`;
+if(k==="prev"&&rain!=="none")o+=`<div class="warn"><b>${T("rainPrev")}</b></div>`;
+o+=`<h3>${T("why")}</h3><ul><li>${S.w1[L](a,x.lim,pn)}</li><li>${S.w2[L](tp,S.rk[x.rk][L])}</li><li>${S.w3[L](st[2+L],st[4])}</li></ul>`;
+if(k==="wait")o+=`<h3>${T("todo")}</h3><ul><li>${S.scout[L](x.days)}</li><li>${T("photo")}</li><li><b>${T("cul")}</b>${p[5+L]}</li></ul>`;
+else{o+=`<h3>${T("todo2")}</h3><ul><li><b>${T("cul")}</b>${p[5+L]}</li><li><b>${T("bio")}</b>${p[7+L]}</li><li>${k==="act"?T("chem"):S.nochem[L](x.lim)}</li></ul><h3>${T("chk")}</h3><p>${S.chk2[L](x.days)}</p>`}
+const r=$("res");r.className="card "+k;r.innerHTML=o}
+function fillPests(){$("pest").innerHTML=D[crop].p.map((p,i)=>`<option value="${i}">${p[L]}</option>`).join("")}
+function build(){
+$("crops").innerHTML=Object.keys(D).map(c=>`<button class="crop" data-c="${c}" aria-pressed="${c===crop}"><span class="e">${D[c].e}</span>${D[c].n[L]}</button>`).join("");
+$("wx").innerHTML=W.map((w,i)=>`<button data-w="${i}" aria-pressed="false">${w[0]} ${w[1+L]}</button>`).join("");
+$("rain").innerHTML=RN.map(r=>`<button data-r="${r[0]}" aria-pressed="${r[0]===rain}">${r[1+L]}</button>`).join("")}
+function labels(){$("h1").textContent=T("h1");$("sub").textContent=T("sub");$("l-crop").textContent=T("crop");$("l-pest").textContent=T("pest");$("l-das").textContent=T("das");$("l-aff").textContent=T("aff");$("n-aff").textContent=T("naff");$("l-wx").textContent=T("wx");$("l-hum").textContent=T("hum");$("l-rain").textContent=T("rain");$("demo").textContent=T("demo");$("foot").textContent=T("foot");document.documentElement.lang=L?"te":"en"}
+function refresh(){const v=$("pest").value;build();fillPests();if(v)$("pest").value=v;labels();render()}
+$("crops").onclick=e=>{const b=e.target.closest("button");if(!b)return;crop=b.dataset.c;build();fillPests();render()};
+$("wx").onclick=e=>{const b=e.target.closest("button");if(!b)return;const w=W[+b.dataset.w];$("hum").value=w[3];rain=w[4];build();[...$("wx").children].forEach(c=>c.setAttribute("aria-pressed",c===b));render()};
+$("rain").onclick=e=>{const b=e.target.closest("button");if(!b)return;rain=b.dataset.r;build();render()};
+["pest","das","aff","hum"].forEach(i=>$(i).addEventListener("input",render));
+function setLang(l){L=l;$("en").setAttribute("aria-pressed",!l);$("te").setAttribute("aria-pressed",!!l);refresh()}
+$("en").onclick=()=>setLang(0);$("te").onclick=()=>setLang(1);
+$("demo").onclick=()=>{crop="chilli";rain="light";build();fillPests();$("pest").value="2";$("das").value=75;$("aff").value=2;$("hum").value=85;render()};
+build();fillPests();$("pest").value="2";labels();render();
+</script></body></html>
